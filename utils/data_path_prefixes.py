@@ -1,0 +1,5 @@
+GEN_OUTPUT_PATH = 'llm_generated_data'
+PARSE_OUTPUT_PATH = 'parsed_data'
+INPUT_DATA_PATH = 'processed_full_input_data'
+PROCESSED_DATA_PATH = 'processed_sampled_input_data'
+HAF_RESULTS_PATH = 'haf_results'

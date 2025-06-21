@@ -1,0 +1,7 @@
+{
+    "civil_comments": "civil_comments",
+    "hate_explain": "https://raw.githubusercontent.com/hate-alert/HateXplain/refs/heads/master/Data/dataset.json",
+    "real_toxicity_prompts": "allenai/real-toxicity-prompts",
+    "implicit_toxicity": "jiaxin-wen/Implicit-Toxicity",
+    "toxigen": "toxigen/toxigen-data"
+}
