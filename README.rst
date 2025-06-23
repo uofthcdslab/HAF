@@ -10,8 +10,8 @@ The complete LLM-generated toxicity explanations and our HAF scores are availabl
 
 Requirements:
 =============
-.. code:: console
-    pip install -r requirements.txt
+
+``pip install -r requirements.txt``
 
 
 Pipeline:
