@@ -2,6 +2,10 @@
 Human-Aligned Faithfulness in Toxicity Explanations of LLMs
 ===========================================================
 
+.. image:: https://github.com/uofthcdslab/HAF/blob/main/utils/haf_intro.png
+  :align: center
+  :width: 400px
+
 The discourse around toxicity and LLMs in NLP largely revolves around detection tasks. This work shifts the focus to evaluating LLMs' *reasoning* about toxicity---from their explanations that justify a stance---to enhance their trustworthiness in downstream tasks. In our recent `paper <arxiv.org>`_, we propose a novel, theoretically-grounded multi-dimensional criterion, **Human-Aligned Faithfulness (HAF)**, that measures how LLMs' free-form toxicity explanations reflect those of a rational human under ideal conditions.
 We develop six metrics, based on uncertainty quantification, to comprehensively evaluate HAF of LLMs' toxicity explanations with no human involvement, and highlight how “non-ideal” the explanations are. This respository contains the code and sample data to reproduce our results. 
 
