@@ -3,7 +3,7 @@ from utils import data_processor
 import json
 import pickle
 from pathlib import Path
-from utils.data_path_prefixes import EVAL_OUTPUT_PATH
+from utils.data_path_prefixes import PARSE_OUTPUT_PATH
 
 class DataLoader:
     """A class to load input data based on user input."""
@@ -53,7 +53,7 @@ class DataLoader:
         """Load input data for LLM generation - to evaluate internal/external reliance"""
         
         # the reason why the data is stored in folders is to accomodate batched loading in the future
-        directory_path = Path(EVAL_OUTPUT_PATH+'/'+model_name.split('/')[1]+'/'+self.data_name+'/'+"initial"+explcit_prompting)
+        directory_path = Path(PARSE_OUTPUT_PATH+'/'+model_name.split('/')[1]+'/'+self.data_name+'/'+"initial"+explcit_prompting)
         directory_path.mkdir(parents=True, exist_ok=True)
         file_path = directory_path / ("extracted_info.pkl")
         with file_path.open("rb") as f:

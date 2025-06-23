@@ -10,7 +10,7 @@ The complete LLM-generated toxicity explanations and our HAF scores are availabl
 
 Requirements:
 =============
-.. code:: python
+.. code:: bash
     pip install -r requirements.txt
 
 
@@ -20,50 +20,58 @@ Pipeline:
 Quick Demo (with sample data):
 ------------------------------
 
-The required sampled input data to run the demo is included in `llm_generated_data` and `parsed_data` directories. To compute HAF metrics on this sample data, run the following command:
+The required sample input data to run the demo is included in `llm_generated_data/ <https://github.com/uofthcdslab/HAF/tree/main/llm_generated_data>`_ and `parsed_data/ <https://github.com/uofthcdslab/HAF/tree/main/parsed_data>`_ directories. To compute HAF metrics on this sample data, run the following command:
+
 .. code:: python
     python haf.py
 
-This will compute the HAF metrics for the sample data and store the results in `haf_results` directory. The sample data includes fine-grained HAF scores for different models and datasets.
+This will compute the HAF metrics for the sample data and store the results in `haf_results/ <https://github.com/uofthcdslab/HAF/tree/main/haf_results>`_ directory. The results include HAF scores for different models and datasets.
 
 
 Reproducing Full Pipeline:
 --------------------------
 
-**Adding a new dataset:**
+**Using an existing or a new dataset:**
 
-1. Add the dataset name and path in `data_path_map.json`.
-2. Include the main processing function for the dataset in `data_processor.py` and give it the exact same name as the dataset name.
-3. Access shared parameters and methods defined in the `DataLoader` class in `data_loader.py` through instance references.
+1. Add the dataset name and path in `utils/data_path_map.json <https://github.com/uofthcdslab/HAF/blob/main/utils/data_path_map.json>`_.
+2. Include the main processing function for the dataset in `utils/data_processor.py <https://github.com/uofthcdslab/HAF/blob/main/utils/data_processor.py>`_ and give it the exact same name as the dataset.
+3. Access shared parameters and methods defined in the `DataLoader <https://github.com/uofthcdslab/HAF/blob/main/data_loader.py#L8>`_ class in `data_loader.py <https://github.com/uofthcdslab/HAF/blob/main/data_loader>`_ through instance references.
 
 
 **LLM explanation generation and parsing:**
 
 In the paper, we describe a three-stage pipeline to compute **HAF** metrics. The pipeline consists of:
 
-1. Stage `JUSTIFY` where LLMs generate explanations for their toxicity decisions (denoted by `stage="initial"`).
-2. Stage `UPHOLD-REASON` where LLMs generate post-hoc explanations to assess the sufficiency of reasons provided in the `JUSTIFY` stage (denoted by `stage="internal"` or `stage="external"`).
-3. Stage `UPHOLD-STACE` where LLMs generate post-hoc explanations to assess the sufficiency and necessity of individual reasons of `JUSTIFY` stage (denoted by `stage="individual"`).
+1. Stage **JUSTIFY** where LLMs generate explanations for their toxicity decisions (denoted by ``stage="initial"``).
+2. Stage **UPHOLD-REASON** where LLMs generate post-hoc explanations to assess the sufficiency of reasons provided in the **JUSTIFY** stage (denoted by ``stage="internal"`` or ``stage="external"``).
+3. Stage **UPHOLD-STACE** where LLMs generate post-hoc explanations to assess the sufficiency and necessity of individual reasons of **JUSTIFY** stage (denoted by ``stage="individual"``).
 
-To implement this, repeat the following steps with each of the four values for the parameter `stage`: `initial`, `internal`, `external`, and `individual` (only the `initial` stage has to be run first; the rest can be run in any order):
+To implement this, repeat the following steps with each of the four values for the parameter ``stage``: ``initial``, ``internal``, ``external``, and ``individual`` (only the ``initial`` stage has to be run first; the rest can be run in any order):
 
-1. Run `generate.py` with `--generation_stage=initial/internal/external/individual` and other optional changes to the generation hyperparameters. 
-2. LLM outputs (tokens, token entropies, and texts) will be generated and stored in `llm_generated_data/<model_name>/<data_name>/<stage>`. 
-3. Run `parse.py` with `stage=initial/internal/external/individual` and other optional parameters to extract LLM decisions, reasons, and other relevant information for computing HAF.
-4. The parsed outputs will be stored in `parsed_data/<model_name>/<data_name>/<stage>`.
+1. Run `generate.py <https://github.com/uofthcdslab/HAF/blob/main/generate.py>`_ with ``--generation_stage=initial/internal/external/individual`` and other optional changes to the generation hyperparameters. 
+2. LLM outputs (tokens, token entropies, and texts) will be generated and stored in ``llm_generated_data/<model_name>/<data_name>/<stage>``. 
+3. Run `parse.py <https://github.com/uofthcdslab/HAF/blob/main/parse.py>`_ with ``stage=initial/internal/external/individual`` and other optional parameters to extract LLM decisions, reasons, and other relevant information for computing HAF.
+4. The parsed outputs will be stored in ``parsed_data/<model_name>/<data_name>/<stage>``.
 
 
 **Computing HAF metrics:**
 
-1. Run `haf.py` with optional parameters to compute HAF metrics for all combinations of models and datasets.
-2. The outputs will be computed for each sample instance and stored in `haf_results/<model_name>/<data_name>/<sample_index>.pkl`.
+1. Run `haf.py <https://github.com/uofthcdslab/HAF/blob/main/haf.py>`_ with optional parameters to compute HAF metrics for all combinations of models and datasets.
+2. The outputs will be computed for each sample instance and stored in ``haf_results/<model_name>/<data_name>/<sample_index>.pkl``.
 
 
 Roadmap:
 ========
-1. We are working on updating the parser files to support more datasets and models. We will soon integrate the results of Microsoft phi-4 reasoning model.
+1. We are working on updating the parser files to support more datasets and models. We will soon integrate the results of Microsoft Phi-4 reasoning model.
 2. We will include the results of naive prompting without explicit reasoning instructions.
 
 
 Citing:
 =======
+Bibtex::
+
+	@article{mothilal2025haf,
+  		title={Human-Aligned Faithfulness in Toxicity Explanations of LLMs},
+  		author={K Mothilal, Ramaravind and Roy, Joanna and Ahmed, Syed Ishtiaque and Guha, Shion},
+  		year={2025}
+	}
