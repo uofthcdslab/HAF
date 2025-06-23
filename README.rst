@@ -22,8 +22,7 @@ Quick Demo (with sample data):
 
 The required sample input data to run the demo is included in `llm_generated_data/ <https://github.com/uofthcdslab/HAF/tree/main/llm_generated_data>`_ and `parsed_data/ <https://github.com/uofthcdslab/HAF/tree/main/parsed_data>`_ directories. To compute HAF metrics on this sample data, run the following command:
 
-.. code:: python
-    python haf.py
+``python haf.py``
 
 This will compute the HAF metrics for the sample data and store the results in `haf_results/ <https://github.com/uofthcdslab/HAF/tree/main/haf_results>`_ directory. The results include HAF scores for different models and datasets.
 
