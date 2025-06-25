@@ -74,7 +74,8 @@ Citing:
 Bibtex::
 
 	@article{mothilal2025haf,
-  		title={Human-Aligned Faithfulness in Toxicity Explanations of LLMs},
-  		author={K Mothilal, Ramaravind and Roy, Joanna and Ahmed, Syed Ishtiaque and Guha, Shion},
-  		year={2025}
+	  title={Human-Aligned Faithfulness in Toxicity Explanations of LLMs},
+	  author={K Mothilal, Ramaravind and Roy, Joanna and Ahmed, Syed Ishtiaque and Guha, Shion},
+	  journal={arXiv preprint arXiv:2506.19113},
+	  year={2025}
 	}
