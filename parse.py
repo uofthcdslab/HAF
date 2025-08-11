@@ -174,8 +174,8 @@ class HAFParser:
                 
                 # token-wise predictive entropies
                 self.logger.debug("Processing entropy values")
-                self.entropies_logits_batch.extend([entropy.clone() for entropy in llm_generation['logits'][batch_ix]])
-                self.entropies_scores_batch.extend([entropy.clone() for entropy in llm_generation['scores'][batch_ix]])
+                self.entropies_logits_batch.extend([entropy.clone() for entropy in llm_generation['logits'][batch_ix]]) if self.stage == 'individual' else self.entropies_logits.extend([entropy.clone() for entropy in llm_generation['logits'][batch_ix]])
+                self.entropies_scores_batch.extend([entropy.clone() for entropy in llm_generation['scores'][batch_ix]]) if self.stage == 'individual' else self.entropies_scores.extend([entropy.clone() for entropy in llm_generation['scores'][batch_ix]])
                 
                 # extract toxicity decision and reasons list for each data point - TODO: modify the below code for batch processing here
                 for sample_ix in range(total_samples_this_batch):
@@ -201,7 +201,7 @@ class HAFParser:
                         one_reason_relevance.append(rel)
                     self.reasons_relevances_batch.append(one_reason_relevance) if self.stage == 'individual' else self.reasons_relevances.extend(one_reason_relevance)
                      
-            self.add_batch() # add rsults of each batch
+            self.add_batch() if self.stage == 'individual' # add rsults of each batch
                                                        
         self.logger.info(f"Processed {file_count} files with a total of {self.total_samples} samples")
         if len(self.input_texts) > 0:
