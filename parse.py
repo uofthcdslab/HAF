@@ -4,8 +4,8 @@ import os
 from transformers import (
     AutoTokenizer,
 )
-from haf.utils import helpers as hp
-from haf.utils.helpers import SentenceSimilarity
+from utils import helpers as hp
+from utils.helpers import SentenceSimilarity
 from utils.logger_setup import setup_logger
 
 import torch
@@ -201,7 +201,7 @@ class HAFParser:
                         one_reason_relevance.append(rel)
                     self.reasons_relevances_batch.append(one_reason_relevance) if self.stage == 'individual' else self.reasons_relevances.extend(one_reason_relevance)
                      
-            self.add_batch() if self.stage == 'individual' # add rsults of each batch
+            self.add_batch() if self.stage == 'individual' else None # add rsults of each batch
                                                        
         self.logger.info(f"Processed {file_count} files with a total of {self.total_samples} samples")
         if len(self.input_texts) > 0:
