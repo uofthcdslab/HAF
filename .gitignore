@@ -1,7 +1,15 @@
+# haf-specific 
+llm_generated_data/
+parsed_data/
+run_scripts/
+slurm_logs/
+logs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
+cache/
 
 # C extensions
 *.so
@@ -35,6 +43,7 @@ MANIFEST
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+get-pip.py
 
 # Unit test / coverage reports
 htmlcov/
