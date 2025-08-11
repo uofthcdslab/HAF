@@ -12,7 +12,8 @@ def main(args_main):
     model_names = ['meta-llama/Llama-3.2-3B-Instruct', 
                'meta-llama/Llama-3.1-8B-Instruct', 
                'mistralai/Ministral-8B-Instruct-2410',
-               'meta-llama/Llama-3.3-70B-Instruct',]
+               'meta-llama/Llama-3.3-70B-Instruct',
+               'microsoft/Phi-4-reasoning']
     data_names = ['civil_comments', 'hate_explain', 'implicit_toxicity', 'real_toxicity_prompts', 'toxigen']
     sanity_checks_colnames = ['model', 'data', 'toxic', 'maybe', 'nontoxic', 'unclear', 
                               'unclear_ixes', 'unclear_sents', 'unclear_sents_ixes', 
