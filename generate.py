@@ -34,6 +34,11 @@ class Generator:
             self.logger.info("Adding pad token to tokenizer")
             self.tokenizer.add_special_tokens({"pad_token":"<pad>"})
         self.tokenizer.padding_side = "left"  # for decoder-type mdoels
+        
+        # Modify chat template to support disable_system_prompt
+        self.logger.info("Modifying chat template to support custom system prompts")
+        self.tokenizer.chat_template = "{% if not disable_system_prompt %}{{'<|im_start|>system<|im_sep|>You are Phi, a language model trained by Microsoft to help users. Your role as an assistant involves thoroughly exploring questions through a systematic thinking process before providing the final precise and accurate solutions. This requires engaging in a comprehensive cycle of analysis, summarizing, exploration, reassessment, reflection, backtracing, and iteration to develop well-considered thinking process. Please structure your response into two main sections: Thought and Solution using the specified format: <think> {Thought section} </think> {Solution section}. In the Thought section, detail your reasoning process in steps. Each step should include detailed considerations such as analysing questions, summarizing relevant findings, brainstorming new ideas, verifying the accuracy of the current steps, refining any errors, and revisiting previous steps. In the Solution section, based on various attempts, explorations, and reflections from the Thought section, systematically present the final solution that you deem correct. The Solution section should be logical, accurate, and concise and detail necessary steps needed to reach the conclusion. Now, try to solve the following question through the above guidelines:<|im_end|>'}}{% endif %}{% for message in messages %}{% if (message['role'] == 'user') %}{{'<|im_start|>user<|im_sep|>' + message['content'] + '<|im_end|>'}}{% elif (message['role'] == 'system') %}{{'<|im_start|>system<|im_sep|>' + message['content'] + '<|im_end|>'}}{% elif (message['role'] == 'assistant') %}{{'<|im_start|>assistant<|im_sep|>'}}{% generation %}{{message['content'] + '<|im_end|>'}}{% endgeneration %}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant<|im_sep|>' }}{% endif %}"
+        
         self.logger.info("Tokenizer initialized successfully")
 
     def initiate_class_variables(self, args):
@@ -89,7 +94,8 @@ class Generator:
                         [{"role": "system", "content": instructions["for_"+self.generation_stage+"_generation"+self.explicit_prompting]},
                         {"role": "user", "content": "\nTEXT: \n" + text.lstrip()}],
                         tokenize=False,
-                        add_generation_prompt=True
+                        add_generation_prompt=True,
+                        disable_system_prompt=True
                     ) for text in sublist] 
                 for sublist in input_data]
         
@@ -110,7 +116,8 @@ class Generator:
                             [{"role": "system", "content": system_prompt},
                             {"role": "user", "content": self.format_inputs_as_chat(extracted_info['input_texts'][ix], modified_reasons)}],
                             tokenize=False,
-                            add_generation_prompt=True
+                            add_generation_prompt=True,
+                            disable_system_prompt=True
                         ))
                 else:
                     for rix in range(len(extracted_info['reasons'][ix])):
@@ -118,7 +125,8 @@ class Generator:
                             [{"role": "system", "content": system_prompt},
                             {"role": "user", "content": self.format_inputs_as_chat(extracted_info['input_texts'][ix], [extracted_info['reasons'][ix][rix]], second_text='\n\nREASON: \n')}],
                             tokenize=False,
-                            add_generation_prompt=True
+                            add_generation_prompt=True,
+                            disable_system_prompt=True
                         ))    
                 input_data.append(one_sample_batch)
          
@@ -139,7 +147,8 @@ class Generator:
                     [{"role": "system", "content": system_prompt},
                     {"role": "user", "content": self.format_inputs_as_chat(extracted_info['input_texts'][ix], extracted_info['reasons'][ix])}],
                     tokenize=False,
-                    add_generation_prompt=True
+                    add_generation_prompt=True,
+                    disable_system_prompt=True
                 ))
             input_data = [input_data[i:i + self.batch_size] for i in range(0, len(input_data), self.batch_size)]    
     
@@ -168,6 +177,11 @@ class Generator:
         self.model.resize_token_embeddings(len(self.tokenizer))
         self.logger.info("Model loaded and prepared for inference")
         # model.generation_config.cache_implementation = "static"
+        
+        # create directory for results
+        directory_path = Path(GEN_OUTPUT_PATH+"/"+self.model_name.split('/')[1]+'/'+self.data_name+'/'+self.generation_stage+self.explicit_prompting)
+        directory_path.mkdir(parents=True, exist_ok=True)
+        self.logger.info(f"Results will be saved to {directory_path}")
         
         # Generations
         input_tokens = []
@@ -238,7 +252,7 @@ class Generator:
                     else:
                         file_path = directory_path / ("samples_"+str(start_ix+1)+"-"+str(end_ix)+".pkl")
                     self.save_results(file_path, input_tokens, output_tokens, logits_entropies, scores_entropies, generated_text)
-                    break;
+                    break
             
             if len(input_tokens) > 0: # store remaining data
                 self.logger.info(f"Saving final results for samples {start_ix+1}-{end_ix}")
@@ -296,7 +310,7 @@ if __name__ == "__main__":
         "--max_new_tokens",
         type=int,
         required=False,
-        default=256,
+        default=1024,
         help="max number of tokens to generate",
     )
     parser.add_argument(
