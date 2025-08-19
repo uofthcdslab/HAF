@@ -71,17 +71,53 @@ def extract_decisions(gen_texts_list, logger):
         sentences = re.split(r'(?<=[.!?])\s+|\n+', sample.strip()) or [""]
         
         decision_found = False
+        best_sentence = None
+        best_confidence = 0
+        
         for sentence in sentences:
             clean_sentence = sentence.strip()
-            if (clean_sentence) and (re.search(r"(" + "|".join(DECISION_KEY_WORDS + MAYBE_TOXIC_KEY_WORDS + ['toxic']) + ")", clean_sentence, re.IGNORECASE)):
-                decision_found = True
-                decision_sentences.append(clean_sentence)
-                decision = get_only_decisions(clean_sentence, logger)
-                logger.debug(f"Found decision in sample {sample_ix}: {decision}")
-                decisions.append(decision)
-                break
+            if not clean_sentence:
+                continue
                 
-        if not decision_found:
+            confidence = 0
+            
+            # Skip task-related sentences (not actual decisions)
+            if re.search(r'\b(need to check|need to answer|need to say|need to provide|we need|instructions|request|question)', clean_sentence, re.IGNORECASE):
+                continue
+            
+            # High confidence patterns (actual decision statements)
+            if re.search(r'^(Yes|No|The text is)\b.*\btoxic\b', clean_sentence, re.IGNORECASE):
+                confidence = 3
+            elif re.search(r'^(The text is)\s+(toxic|not toxic|non-toxic)\b', clean_sentence, re.IGNORECASE):
+                confidence = 3
+            elif re.search(r'\b(is|isn\'t|not)\s+(toxic|non-toxic)\b', clean_sentence, re.IGNORECASE):
+                confidence = 3
+            # Declarative statements about toxicity (but exclude task-related ones)
+            elif re.search(r'^(It is|This is|Text is)\s.*\btoxic\b', clean_sentence, re.IGNORECASE):
+                confidence = 2
+            elif re.search(r'\btoxic\b\.$', clean_sentence, re.IGNORECASE) and not re.search(r'\?|check|answer|provide', clean_sentence, re.IGNORECASE):
+                confidence = 2
+            # Medium confidence (contains decision words and toxic)
+            elif re.search(r'\btoxic\b', clean_sentence, re.IGNORECASE) and re.search(r"(" + "|".join(DECISION_KEY_WORDS) + ")", clean_sentence, re.IGNORECASE):
+                confidence = 1
+            # Low confidence (just contains keywords)
+            elif re.search(r"(" + "|".join(DECISION_KEY_WORDS + MAYBE_TOXIC_KEY_WORDS + ['toxic']) + ")", clean_sentence, re.IGNORECASE):
+                # Skip questions and prompts
+                if re.search(r'\?|request:|instructions:', clean_sentence, re.IGNORECASE):
+                    continue
+                confidence = 0.5
+                
+            if confidence > best_confidence:
+                best_confidence = confidence
+                best_sentence = clean_sentence
+                decision_found = True
+                
+        if decision_found and best_sentence:
+            decision_sentences.append(best_sentence)
+            decision = get_only_decisions(best_sentence, logger)
+            logger.debug(f"Found decision in sample {sample_ix}: {decision} (confidence: {best_confidence})")
+            decisions.append(decision)
+        else:
             logger.warning(f"No decision found in sample {sample_ix}")
             decision_sentences.append("NO OR UNCLEAR DECISION")
             decisions.append("NO OR UNCLEAR DECISION")
@@ -114,14 +150,31 @@ def extract_reasons(gen_texts_list, decision_sentences, stage, logger):
     logger.info("Starting reasons extraction")
         
     reasons = []
-    pattern = r'(?:^\d+[.)]\s*|^[-*]\s*)([\s\S]+?)(?=\n^\d+[.)]\s*|\n^[-*]\s*|\Z)'
+    
+    # Pattern for numbered items (1. or 1) format) - works for embedded and standalone
+    numbered_pattern = r'\d+[.)]\s*([^0-9][^.]*?)(?=\s*\d+[.)]|\.|\s*$)'
+    
+    # Pattern for bullet points (- or * at start of line)
+    bullet_pattern = r'^[-*]\s*([\s\S]+?)(?=\n^[-*]\s*|\Z)'
     
     for i, sample in enumerate(gen_texts_list):
         logger.debug(f"Processing sample {i}")
         
         sample = sample.replace(decision_sentences[i], '')
-        reasons_in_this_sample = re.findall(pattern, sample, re.MULTILINE)
-        reasons_in_this_sample = [s.strip().split('\n\n', 1)[0] for s in reasons_in_this_sample if s.strip() not in ['', '*'] and len(s.strip()) > 20]
+        
+        # Extract numbered reasons
+        numbered_reasons = re.findall(numbered_pattern, sample, re.MULTILINE | re.DOTALL)
+        numbered_reasons = [s.strip() for s in numbered_reasons if s.strip()]
+        
+        # Extract bullet point reasons
+        bullet_reasons = re.findall(bullet_pattern, sample, re.MULTILINE)
+        bullet_reasons = [s.strip().split('\n\n', 1)[0] for s in bullet_reasons if s.strip()]
+        
+        # Combine all reasons
+        reasons_in_this_sample = numbered_reasons + bullet_reasons
+        
+        # Filter out short or invalid reasons
+        reasons_in_this_sample = [s for s in reasons_in_this_sample if s not in ['', '*'] and len(s) > 20]
         
         logger.debug(f"Removing incorrect reasons in sample {i}")
         del_ix = []
@@ -163,6 +216,12 @@ def extract_indices_for_one_sample(reasons_tokens, decision_tokens, output_token
         cont_matches = torch.diff(torch.cat([torch.tensor([0]), cont_matches, torch.tensor([0])]))
         starts = (cont_matches == 1).nonzero(as_tuple=True)[0]
         ends = (cont_matches == -1).nonzero(as_tuple=True)[0]
+        
+        if len(starts) == 0 or len(ends) == 0:
+            if logger:
+                logger.warning(f"No continuous sequences found for target tokens: {target_tokens}")
+            return (matching_indices[0].item(), matching_indices[-1].item() + 1)
+        
         lengths = ends - starts
         max_idx = torch.argmax(lengths)
         
