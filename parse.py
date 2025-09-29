@@ -312,7 +312,7 @@ if __name__ == "__main__":
         "--stage", type=str, required=True, help="initial, internal, or external"
     )
     parser.add_argument(
-        "--explicit_prompting", type=str, required=False, default='False', help="prompt with explicit instructions"
+        "--explicit_prompting", type=str, required=False, default='True', help="prompt with explicit instructions"
     )
     parser.add_argument(
         "--log_level", type=str, required=False, default="INFO", 
